@@ -95,5 +95,5 @@ Latihan 3 - **Siti Aisyah Nor Fitriani (2210010043)**
 
 ## **Pembuat Aplikasi**  
 - **Nama**: Siti Aisyah Nor Fitriani  
-- **NIM**: 2210010043  
-- **Latihan**: Tugas 3  
+- **NPM**: 2210010043  
+- **Latihan**: Latihan 3 
