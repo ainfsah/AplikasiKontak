@@ -35,6 +35,7 @@ public class Latihan3 extends javax.swing.JFrame {
           "Nama", "Nomor Telepon", "Kategori"
     }
 ));
+         
     }
 
 
@@ -53,7 +54,6 @@ public class Latihan3 extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         txtNama = new javax.swing.JTextField();
         txtNoTelp = new javax.swing.JTextField();
-        txtKategori = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         txtCari = new javax.swing.JTextField();
@@ -67,6 +67,7 @@ public class Latihan3 extends javax.swing.JFrame {
         btnCari = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         btnReset = new javax.swing.JButton();
+        cmbKategori = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -163,6 +164,13 @@ public class Latihan3 extends javax.swing.JFrame {
             }
         });
 
+        cmbKategori.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "semua", "keluarga", "teman", "kerja" }));
+        cmbKategori.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbKategoriActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -182,8 +190,8 @@ public class Latihan3 extends javax.swing.JFrame {
                                 .addComponent(txtNama, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel3)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtKategori))))
+                                .addGap(18, 18, 18)
+                                .addComponent(cmbKategori, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(57, 57, 57)
                         .addComponent(jLabel4))
@@ -238,7 +246,7 @@ public class Latihan3 extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
-                            .addComponent(txtKategori, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(cmbKategori, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btnTambahKontak)
@@ -401,7 +409,7 @@ public class Latihan3 extends javax.swing.JFrame {
         // Ambil data dari input field
     String nama = txtNama.getText().trim();
     String nomorTelepon = txtNoTelp.getText().trim();
-    String kategori = txtKategori.getText().trim();
+    String kategori = cmbKategori.getSelectedItem().toString().trim();
 
     // Validasi input
     if (nama.isEmpty() || nomorTelepon.isEmpty() || kategori.isEmpty()) {
@@ -417,7 +425,7 @@ public class Latihan3 extends javax.swing.JFrame {
     // Bersihkan input field setelah menambahkan data
     txtNama.setText("");
     txtNoTelp.setText("");
-    txtKategori.setText("");
+    cmbKategori.setSelectedItem("");
 
     // Berikan notifikasi ke pengguna
     JOptionPane.showMessageDialog(this, "Kontak berhasil ditambahkan ke tabel.");
@@ -484,7 +492,7 @@ if (result == JFileChooser.APPROVE_OPTION) {
     // Ambil data dari input field
     String nama = txtNama.getText().trim();
     String nomorTelepon = txtNoTelp.getText().trim();
-    String kategori = txtKategori.getText().trim();
+    String kategori = cmbKategori.getSelectedItem().toString().trim();
 
     // Validasi input
     if (nama.isEmpty() || nomorTelepon.isEmpty() || kategori.isEmpty()) {
@@ -518,7 +526,9 @@ if (result == JFileChooser.APPROVE_OPTION) {
     }//GEN-LAST:event_btnMuatDataActionPerformed
 
     private void btnCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCariActionPerformed
-         String keyword = txtCari.getText().trim();
+        
+    String keyword = txtCari.getText().trim();
+    String selectedCategory = (String) cmbKategori.getSelectedItem(); // Ambil kategori dari JComboBox
 
     if (keyword.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Masukkan kata kunci untuk mencari!", "Peringatan", JOptionPane.WARNING_MESSAGE);
@@ -532,11 +542,22 @@ if (result == JFileChooser.APPROVE_OPTION) {
     model.setRowCount(0);
 
     try (java.sql.Connection connection = koneksi.getConnection()) {
-        // Query untuk mencari data berdasarkan nama atau nomor telepon
-        String query = "SELECT nama, nomor_telepon, kategori FROM kontak WHERE nama LIKE ? OR nomor_telepon LIKE ?";
+        // Query untuk mencari data berdasarkan nama, nomor telepon, atau kategori
+        String query = "SELECT nama, nomor_telepon, kategori FROM kontak WHERE (nama LIKE ? OR nomor_telepon LIKE ?)";
+        
+        // Jika kategori dipilih, tambahkan filter kategori ke query
+        if (selectedCategory != null && !selectedCategory.equals("Semua")) {
+            query += " AND kategori = ?";
+        }
+
         PreparedStatement preparedStatement = connection.prepareStatement(query);
         preparedStatement.setString(1, "%" + keyword + "%");
         preparedStatement.setString(2, "%" + keyword + "%");
+
+        // Jika kategori dipilih selain "Semua", tambahkan parameter kategori
+        if (selectedCategory != null && !selectedCategory.equals("Semua")) {
+            preparedStatement.setString(3, selectedCategory);
+        }
 
         ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -555,9 +576,10 @@ if (result == JFileChooser.APPROVE_OPTION) {
             JOptionPane.showMessageDialog(this, "Tidak ditemukan data dengan kata kunci: " + keyword, "Hasil Pencarian", JOptionPane.INFORMATION_MESSAGE);
         }
     } catch (Exception e) {
-        e.printStackTrace();
         JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat mencari data: " + e.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
     }
+
+
     }//GEN-LAST:event_btnCariActionPerformed
 
     private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
@@ -582,18 +604,32 @@ if (result == JFileChooser.APPROVE_OPTION) {
     }//GEN-LAST:event_btnResetActionPerformed
 
     private void txtNoTelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNoTelpActionPerformed
-        txtNoTelp.addKeyListener(new KeyAdapter() {
+          txtNoTelp.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
                 char c = e.getKeyChar();
+                String text = txtNoTelp.getText();
+
+                // Hanya menerima angka
                 if (!Character.isDigit(c)) {
-                    e.consume(); // Remove non-digit character
+                    e.consume();  // Hapus karakter non-digit
                     JOptionPane.showMessageDialog(null, "Masukkan hanya angka!", "Input Salah", JOptionPane.ERROR_MESSAGE);
+                }
+
+                // Batasi panjang input (misalnya 13 digit)
+                int maxDigits = 13;  // Sesuaikan jumlah digit
+                if (text.length() >= maxDigits) {
+                    e.consume();  // Hentikan input jika sudah mencapai panjang maksimal
+                    JOptionPane.showMessageDialog(null, "Nomor telepon tidak boleh lebih dari " + maxDigits + " digit!", "Input Salah", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
     
     }//GEN-LAST:event_txtNoTelpActionPerformed
+
+    private void cmbKategoriActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbKategoriActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbKategoriActionPerformed
 
     /**
      * @param args the command line arguments
@@ -640,6 +676,7 @@ if (result == JFileChooser.APPROVE_OPTION) {
     private javax.swing.JButton btnSimpan;
     private javax.swing.JButton btnTambahKontak;
     private javax.swing.JButton btnUbahKontak;
+    private javax.swing.JComboBox<String> cmbKategori;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -648,7 +685,6 @@ if (result == JFileChooser.APPROVE_OPTION) {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField txtCari;
-    private javax.swing.JTextField txtKategori;
     private javax.swing.JTextField txtNama;
     private javax.swing.JTextField txtNoTelp;
     // End of variables declaration//GEN-END:variables
